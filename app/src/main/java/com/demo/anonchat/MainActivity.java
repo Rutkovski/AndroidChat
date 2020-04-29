@@ -10,6 +10,7 @@ import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
@@ -20,15 +21,20 @@ public class MainActivity extends AppCompatActivity {
     MessageController controller;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         chatWindow =findViewById(R.id.chatWindow);
         sendButton=findViewById(R.id.sendMessage);
         inputMessage =findViewById(R.id.inputMessage);
         controller = new MessageController();
+
         controller.setIncomingLayout(R.layout.incoming_message)
                 .setOutgoingLayout(R.layout.message)
                 .setMessageTextId(R.id.messageText)
@@ -44,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
                    @Override
                    public void run() {
                        controller.addMessage(
+
                                new MessageController.Message(
                                        pair.second,
                                        pair.first,
@@ -54,8 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
         server.connect();
+
 
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,12 +77,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Context context = getApplicationContext();
-        CharSequence text = "Hello toast!";
-        int duration = Toast.LENGTH_SHORT;
 
-        Toast toast = Toast.makeText(context, text, duration);
-        toast.show();
+
 
     }
 }

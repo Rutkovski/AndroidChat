@@ -15,12 +15,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
     private WebSocketClient client;
+
+
     private Map<Long, String> names = new ConcurrentHashMap<>();
     private Consumer<Pair<String,String>> onMessageReceived; //Коллбэки
+    private Consumer<Integer> count;
+
 
     public Server(Consumer<Pair<String, String>> onMessageReceived) {
         this.onMessageReceived = onMessageReceived;
     }
+
+
+
 
     public void connect() {
         //Выполняем подключение к серверу
@@ -50,6 +57,7 @@ public class Server {
                 }
                 if (type == Protocol.USER_STATUS){
                    updateStatus(Protocol.unpackStatus(json));
+
                 }
 
             }
@@ -92,9 +100,14 @@ public class Server {
        // При подключении кладем, при отключении удаляем
         if (status.isConnected()){
             names.put(user.getId(), user.getName());
+
+
+
         }
         else {
             names.remove(user.getId());
+
+
         }
 
     }
@@ -106,7 +119,7 @@ public class Server {
         }
 
         onMessageReceived.accept(
-                new Pair<>(name,message.getEncodedText()) // Отправляем в MainActivity пришедшее сообщение
+                new Pair<>(name, message.getEncodedText()) // Отправляем в MainActivity пришедшее сообщение
 
 
         );
