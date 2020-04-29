@@ -14,6 +14,7 @@ public class MainActivity extends AppCompatActivity {
     Button sendButton;
     EditText inputMessage;
     MessageController controller;
+    String test;
 
 
     @Override
