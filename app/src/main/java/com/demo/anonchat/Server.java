@@ -19,15 +19,19 @@ public class Server {
 
     private Map<Long, String> names = new ConcurrentHashMap<>();
     private Consumer<Pair<String,String>> onMessageReceived; //Коллбэки
-    private Consumer<Integer> count;
+    private Consumer<Integer> onUpdatesStatus;
+    private Consumer<String> onUserConnect;
 
 
-    public Server(Consumer<Pair<String, String>> onMessageReceived) {
+    public Server(
+            Consumer<Pair<String, String>> onMessageReceived,
+            Consumer<Integer> onUpdatesStatus,
+            Consumer<String> onUserConnect
+    ){
         this.onMessageReceived = onMessageReceived;
+        this.onUpdatesStatus = onUpdatesStatus;
+        this.onUserConnect = onUserConnect;
     }
-
-
-
 
     public void connect() {
         //Выполняем подключение к серверу
@@ -45,7 +49,6 @@ public class Server {
             @Override
             public void onOpen(ServerHandshake handshakedata) {
                 Log.i("SERVER", "Connected to server");
-                sendName("Rut");
             }
 
             @Override
@@ -79,14 +82,13 @@ public class Server {
 
     }
 
-    public void sendName(String name){
-        Protocol.Username username = new Protocol.Username(name);
-        if (client != null && client.isOpen() ){
-        client.send(Protocol.pacName(username));
-        }
-    }
 
     public void sendMessage(String text){
+        try {
+            text = Crypto.encrypt(text);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Protocol.Message mess = new Protocol.Message(text);
         if (client != null&& client.isOpen()) {
             client.send(Protocol.pacMessage(mess));
@@ -94,32 +96,44 @@ public class Server {
 
     }
 
+    public void sendName(String name){
+        Protocol.Username username = new Protocol.Username(name);
+        if (client != null && client.isOpen() ){
+            client.send(Protocol.pacName(username));
+        }
+    }
+
+
     private void updateStatus (Protocol.UserStatus status){
         // Запомнить что такой-то пользователь имеет такой-то статус (онлайн или офлайн)
        Protocol.User user = status.getUser();
        // При подключении кладем, при отключении удаляем
         if (status.isConnected()){
-            names.put(user.getId(), user.getName());
-
-
-
+            String userName = user.getName();
+            names.put(user.getId(), userName);
+            onUserConnect.accept(userName);
         }
         else {
             names.remove(user.getId());
-
-
         }
 
+        onUpdatesStatus.accept(names.size());
     }
 
     private void displayIncoming(Protocol.Message message){
         String name = names.get(message.getSender());
-        if (name == null){
+        if (name == null) {
             name = "Unnamed";
+        }
+        String text = null;
+        try {
+            text = Crypto.decrypt(message.getEncodedText());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         onMessageReceived.accept(
-                new Pair<>(name, message.getEncodedText()) // Отправляем в MainActivity пришедшее сообщение
+                new Pair<>(name, text) // Отправляем в MainActivity пришедшее сообщение
 
 
         );
